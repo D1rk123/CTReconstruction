@@ -8,7 +8,7 @@ To simulate the acquisition of CT data the user can define a phantom consisting 
 ![Phantom and sinogram](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/PhantomAndSinogram.png)
 
 ## Reconstruction by Matrix Inversion
-The process of calculating the projections from a given image can be modelled as a linear process: A**x** = **y**, where **x** is a vector representing the image and **y** is a vector representing the sinogram. In a typical reconstruction setting **y** is measured and A can be derived from the setup, so **x** can be calculated by solving the equation for **x**. In most of my experiments I chose **x** and **y** to be the same size and the corresponding matrix A turned out to be slightly rank deficient. Therefore I solved it in the least squares sense using the singular value decomposition based solver from Numpy. I discarded the lowest singular values to reduce the noise in the reconstructed image caused by a slight mismatch between matrix A and the simulation used for generating the sinogram.
+The process of calculating the projections from a given image can be modelled as a linear process: A**x** = **y**, where **x** is a vector representing the image and **y** is a vector representing the sinogram. In a typical reconstruction setting **y** is measured and A can be derived from the setup, so **x** can be calculated by solving the equation for **x**. In most of my experiments I chose **x** and **y** to be the same size and the corresponding matrix A turned out to be slightly rank deficient. However the equation can still be solved in the least squares sense. The code uses the singular value decomposition based solver from Numpy. It discards the lowest singular values to reduce the noise in the reconstructed image caused by a slight mismatch between matrix A and the simulation used for generating the sinogram.
 
 ![Matrix inversion reconstruction](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/LeastSquares.png)
 
@@ -19,8 +19,8 @@ Another technique to reconstruct a CT image is filtered back projection. In this
 
 ![Filtered back projection reconstruction](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/FilteredBackProjection.png)
 
-In the image above I used a straightforward ramp filter. As you can see the overall shape is reconstructed correctly, but the whole image is mostly underestimated. By looking at the implementation of filtered back projection in skimage I found out that they used a slightly smarter filter. I also made this filter available in my code. With that filter most of the image is correctly reconstructed.
+In the image above I used a straightforward ramp filter. As you can see the overall shape is reconstructed correctly, but the most of the image is slightly underestimated. By looking at the implementation of filtered back projection in the skimage library I found out that they used a slightly smarter filter. I also made this filter available in my code. With that filter most of the image is correctly reconstructed.
 
 ![Filtered back projection reconstruction with smarter filter](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/FilteredBackProjectionSkimageFilter.png)
 
-For more information on this filter you can have a look at [skimage source code](https://github.com/scikit-image/scikit-image/blob/master/skimage/transform/radon_transform.py#L184-L305) or at chapter 3 of the book they mentioned as the origin of this filter: http://www.slaney.org/pct/pct-toc.html.
+For more information on this filter you can have a look at [the skimage source code](https://github.com/scikit-image/scikit-image/blob/master/skimage/transform/radon_transform.py#L184-L305) or at chapter 3 of the book they mentioned as a reference: http://www.slaney.org/pct/pct-toc.html.
