@@ -67,7 +67,11 @@ def makeBackprojection(sinogram):
 	angleRange = np.linspace(0, math.pi, num=numProjections, endpoint=False)
 	for i in range(numProjections):
 		backprojection = np.repeat(sinogram[:, i, np.newaxis].T, numDetectors, axis=0)
-		result = result + skimage.transform.rotate(backprojection, math.degrees(angleRange[i]), mode='constant', cval=0)
+		result = result + skimage.transform.rotate(backprojection, math.degrees(angleRange[i]), clip=False, mode='constant', cval=0)
+		#rotatedProj = skimage.transform.rotate(backprojection, math.degrees(angleRange[i]), mode='constant', cval=0)
+		#plt.imshow(result.T, origin='lower', cmap='gray')
+		#plt.colorbar()
+		#plt.show()
 	return result
 	
 def filterSinogram(sinogram):
@@ -90,7 +94,7 @@ def makeForwardMatrix(numDetectors, numProjections, resX, resY):
 			#mode=constant, cval=0 specifies that when sampling outside of the image extents the image is assumed to be zero
 			#this isn't entirely accurate outside of the scanning circle
 			#but it shouldn't matter too much because all values outside the scanning circle are 0 in our experiments
-			#however I've seen that the mode setting does have some effect on the reconstruction artifacts
+			#however I've seen that the mode setting does have some effect on the artifacts visible in the reconstruction
 			rotatedArea = skimage.transform.rotate(affectedArea, math.degrees(angleRange[i]), mode='constant', cval=0)
 			#plt.imshow(rotatedArea.T, origin='lower', cmap='gray')
 			#plt.colorbar()

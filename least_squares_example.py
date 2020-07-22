@@ -10,10 +10,10 @@ phantom = [ctt.Circle(np.array([-0.5, 0.5]), 0.2, 1),
            ctt.Circle(np.array([-0.4, -0.4]), 0.3, 2),
            ctt.Circle(np.array([0.5, 0.1]), 0.4, 3)]
 
-resX = 100
+resX = 50
 resY = resX
-numDetectors = 100
-numProjections = 100
+numDetectors = 50
+numProjections = 50
 
 groundTruth = ctt.rasterize(phantom, resX, resY)
 groundTruth.shape = (resX*resY)
@@ -23,28 +23,39 @@ altSinogram = np.dot(forwardMatrix, groundTruth)
 altSinogram.shape = (numDetectors, numProjections)
 
 plt.subplot(121)
-plt.imshow(sinogram.T, origin='lower', cmap='gray')
-plt.title("Simulated sinogram")
+plt.imshow(altSinogram.T, origin='lower', cmap='gray')
+plt.title("Forward Matrix")
 plt.colorbar()
 plt.subplot(122)
-plt.imshow(altSinogram.T, origin='lower', cmap='gray')
-plt.title("Sinogram calculated by forward matrix")
+plt.imshow(sinogram.T, origin='lower', cmap='gray')
+plt.title("Ray Tracing")
 plt.colorbar()
+plt.suptitle("Sinogram Comparison")
 plt.show()
 
 groundTruth.shape = (resX, resY)
 sinogram.shape = (numDetectors*numProjections)
-#Some regularization is required to get a good solution. With rcond=None you only see noise
+#Some regularization is required to get a good solution. With rcond=None you see only noise
 reconstruction, _, rank, _ = np.linalg.lstsq(forwardMatrix, sinogram, rcond=0.075)
 reconstruction.shape = (resX, resY)
 print("Used singular values: {}".format(rank))
 
-plt.subplot(121)
-plt.imshow(groundTruth.T, origin='lower', cmap='gray')
-plt.title("groundTruth")
+vmin = min(np.min(reconstruction), np.min(groundTruth))
+vmax = max(np.max(reconstruction), np.max(groundTruth))
+error = reconstruction-groundTruth
+
+plt.subplot(131)
+plt.imshow(reconstruction.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
+plt.title("Least Squares Reconstruction")
 plt.colorbar()
-plt.subplot(122)
-plt.imshow(reconstruction.T, origin='lower', cmap='gray')
-plt.title("reconstruction")
+
+plt.subplot(132)
+plt.imshow(groundTruth.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
+plt.title("Rasterized Phantom")
+plt.colorbar()
+
+plt.subplot(133)
+plt.imshow(error.T, origin='lower', cmap='PuOr_r', vmin=-1.5, vmax=1.5)
+plt.title("Error")
 plt.colorbar()
 plt.show()
