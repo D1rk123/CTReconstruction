@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import skimage.transform
+import scipy
 from matplotlib import pyplot as plt
 
 class Circle:
@@ -68,18 +69,48 @@ def makeBackprojection(sinogram):
 	for i in range(numProjections):
 		backprojection = np.repeat(sinogram[:, i, np.newaxis].T, numDetectors, axis=0)
 		result = result + skimage.transform.rotate(backprojection, math.degrees(angleRange[i]), clip=False, mode='constant', cval=0)
+		
+		#uncomment code below to plot every backprojection
 		#rotatedProj = skimage.transform.rotate(backprojection, math.degrees(angleRange[i]), mode='constant', cval=0)
-		#plt.imshow(result.T, origin='lower', cmap='gray')
+		#plt.imshow(rotatedProj.T, origin='lower', cmap='gray')
 		#plt.colorbar()
 		#plt.show()
-	return result
+	return result*(math.pi/4)
 	
-def filterSinogram(sinogram):
+#Another aproach to implementing backprojection.
+#Does almost the same as makeBackProjection, but is probably a bit more efficient
+#I got the idea from the skimage implementation of fbp in the skimage.transform.iradon function
+def makeBackprojection2(sinogram, resolution):
 	numDetectors = sinogram.shape[0]
 	numProjections = sinogram.shape[1]
+	result = np.zeros([resolution, resolution])
+	angleRange = np.linspace(0, math.pi, numProjections, endpoint=False)
+	coords = np.mgrid[0:resolution, 0:resolution]
+	coords = coords*(numDetectors/resolution)-(numDetectors/2)
+	coords.shape = (2, resolution*resolution)
+	sinogramRange = np.arange(numDetectors)
+	for i in range(numProjections):
+		rotation = np.array([math.sin(-angleRange[i]), math.cos(-angleRange[i])])
+		lookupLocation = np.dot(rotation, coords)+(numDetectors/2)
+		backprojection = np.interp(lookupLocation, sinogramRange, sinogram[:, i], left=0, right=0)
+		backprojection.shape = (resolution, resolution)
+		result = result + backprojection
+		
+		#uncomment code below to plot every backprojection
+		#plt.imshow(backprojection.T, origin='lower', cmap='gray')
+		#plt.colorbar()
+		#plt.show()
+	return result*(math.pi/4)
+	
+def filterSinogram(sinogram, useSkimageFilter):
+	numDetectors = sinogram.shape[0]
 	fftSinogram = np.fft.fft(sinogram, axis=0)
-	filter = np.abs(np.fft.fftfreq(numDetectors))*2
-	filteredFftSinogram = fftSinogram * filter[:, np.newaxis]
+	if useSkimageFilter:
+		filter = skimage.transform.radon_transform._get_fourier_filter(numDetectors, 'ramp')
+	else:
+		filter = np.abs(np.fft.fftfreq(numDetectors))*2
+		filter.shape = (numDetectors, 1)
+	filteredFftSinogram = fftSinogram * filter
 	return np.real(np.fft.ifft(filteredFftSinogram, axis=0))
 	
 def makeForwardMatrix(numDetectors, numProjections, resX, resY):

@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import skimage.transform
 from matplotlib import pyplot as plt
 import ct_toolbox as ctt
 
@@ -10,10 +9,10 @@ phantom = [ctt.Circle(np.array([-0.5, 0.5]), 0.2, 1),
            ctt.Circle(np.array([-0.4, -0.4]), 0.3, 2),
            ctt.Circle(np.array([0.5, 0.1]), 0.4, 3)]
 
-resolution = 512
+resolution = 256
 
 sinogram = ctt.makeSinogram(phantom, resolution, resolution)
-filteredSinogram = ctt.filterSinogram(sinogram)
+filteredSinogram = ctt.filterSinogram(sinogram, False)
 
 plt.subplot(121)
 plt.imshow(sinogram.T, origin='lower', cmap='gray')
@@ -26,11 +25,10 @@ plt.colorbar()
 plt.show()
 
 reconstruction = ctt.makeBackprojection(filteredSinogram)
-#reconstruction = skimage.transform.iradon(sinogram, np.linspace(0, 180, resolution, endpoint=False), resolution)*resolution/2
-groundTruth = ctt.rasterize(phantom, resolution, resolution)
-error = reconstruction-groundTruth
-vmin = min(np.min(reconstruction), np.min(groundTruth))
-vmax = max(np.max(reconstruction), np.max(groundTruth))
+rasterizedPhantom = ctt.rasterize(phantom, resolution, resolution)
+error = reconstruction-rasterizedPhantom
+vmin = min(np.min(reconstruction), np.min(rasterizedPhantom))
+vmax = max(np.max(reconstruction), np.max(rasterizedPhantom))
 
 plt.subplot(131)
 plt.imshow(reconstruction.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
@@ -38,7 +36,7 @@ plt.title("FBP Reconstruction")
 plt.colorbar()
 
 plt.subplot(132)
-plt.imshow(groundTruth.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
+plt.imshow(rasterizedPhantom.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
 plt.title("Rasterized Phantom")
 plt.colorbar()
 

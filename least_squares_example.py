@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import skimage.transform
 from matplotlib import pyplot as plt
 import ct_toolbox as ctt
 
@@ -35,6 +34,7 @@ plt.show()
 
 groundTruth.shape = (resX, resY)
 sinogram.shape = (numDetectors*numProjections)
+#rcond=0.075 means that all singular values smaller then 0.075 times the largest singular value are discarded
 #Some regularization is required to get a good solution. With rcond=None you see only noise
 reconstruction, _, rank, _ = np.linalg.lstsq(forwardMatrix, sinogram, rcond=0.075)
 reconstruction.shape = (resX, resY)
