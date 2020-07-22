@@ -16,10 +16,10 @@ class Circle:
 
 def makeCoordsMatrix(resX, resY):
 	spaceX = np.linspace(-1, 1, resX)
-	spaceY = np.linspace(-1, 1, resX)
+	spaceY = np.linspace(-1, 1, resY)
 	
 	coordX = np.repeat(spaceX[:, np.newaxis], resY, axis=1)
-	coordY = np.repeat(spaceY[np.newaxis, :], resY, axis=0)
+	coordY = np.repeat(spaceY[np.newaxis, :], resX, axis=0)
 	
 	return np.stack((coordX, coordY), axis=-1)
 
@@ -61,8 +61,8 @@ def makeSinogram(circles, numDetectors, numProjections):
 
 
 def makeBackprojection(sinogram):
-	numProjections = sinogram.shape[1]
 	numDetectors = sinogram.shape[0]
+	numProjections = sinogram.shape[1]
 	result = np.zeros([numDetectors, numDetectors])
 	angleRange = np.linspace(0, math.pi, num=numProjections, endpoint=False)
 	for i in range(numProjections):
@@ -71,52 +71,30 @@ def makeBackprojection(sinogram):
 	return result
 	
 def filterSinogram(sinogram):
-	numProjections = sinogram.shape[1]
 	numDetectors = sinogram.shape[0]
+	numProjections = sinogram.shape[1]
 	fftSinogram = np.fft.fft(sinogram, axis=0)
 	filter = np.abs(np.fft.fftfreq(numDetectors))*2
 	filteredFftSinogram = fftSinogram * filter[:, np.newaxis]
 	return np.real(np.fft.ifft(filteredFftSinogram, axis=0))
-
-phantom = [Circle(np.array([-0.5, 0.5]), 0.2, 1),
-           Circle(np.array([-0.4, -0.4]), 0.3, 2),
-           Circle(np.array([0.5, 0.1]), 0.4, 3)]
-
-proj = makeProjection(phantom, 0, 20)
-print(proj)
-
-sinogram = makeSinogram(phantom, 300, 300)
-filteredSinogram = filterSinogram(sinogram)
-
-plt.subplot(121)
-plt.imshow(sinogram.T, origin='lower', cmap='gray')
-plt.title("Sinogram")
-plt.colorbar()
-plt.subplot(122)
-plt.imshow(filteredSinogram.T, origin='lower', cmap='gray')
-plt.title("Filtered Sinogram")
-plt.colorbar()
-plt.show()
-
-reconstruction = makeBackprojection(filteredSinogram)
-groundTruth = rasterize(phantom, 300, 300)
-error = reconstruction-groundTruth
-vmin = min(np.min(reconstruction), np.min(groundTruth))
-vmax = max(np.max(reconstruction), np.max(groundTruth))
-
-plt.subplot(131)
-plt.imshow(reconstruction.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
-plt.title("Reconstruction")
-plt.colorbar()
-
-plt.subplot(132)
-plt.imshow(groundTruth.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
-plt.title("Original")
-plt.colorbar()
-
-plt.subplot(133)
-plt.imshow(error.T, origin='lower')
-plt.title("Error")
-plt.colorbar()
-
-plt.show()
+	
+def makeForwardMatrix(numDetectors, numProjections, resX, resY):
+	angleRange = np.linspace(0, math.pi, num=numProjections, endpoint=False)
+	result = np.zeros([numProjections*numDetectors, resX*resY])
+	for i in range(numProjections):
+		for j in range(numDetectors):
+			line = np.zeros(numDetectors)
+			segmentlength = 2  #length of the line segment we integrate over
+			line[j]=segmentlength*(numDetectors/resY)/resX
+			affectedArea = skimage.transform.resize(line[np.newaxis, :], (resX, resY))
+			#mode=constant, cval=0 specifies that when sampling outside of the image extents the image is assumed to be zero
+			#this isn't entirely accurate outside of the scanning circle
+			#but it shouldn't matter too much because all values outside the scanning circle are 0 in our experiments
+			#however I've seen that the mode setting does have some effect on the reconstruction artifacts
+			rotatedArea = skimage.transform.rotate(affectedArea, math.degrees(angleRange[i]), mode='constant', cval=0)
+			#plt.imshow(rotatedArea.T, origin='lower', cmap='gray')
+			#plt.colorbar()
+			#plt.show()
+			rotatedArea.shape = (result.shape[1])
+			result[i+j*numProjections, :] = rotatedArea
+	return result
