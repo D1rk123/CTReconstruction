@@ -3,7 +3,7 @@
 This repository contains Python scripts for the simulation of CT data acquisition and for CT reconstruction. The ct_toolbox.py file contains all reusable functions and the fbp_example.py and least_squares_example.py files show how this functionality can be used to reconstruct a CT image in 2 different ways: matrix inversion and filtered back projection.
 
 ## CT Simulation
-To simulate the acquisition of CT data the user can define a phantom consisting of nonoverlapping circles. From this continuous representation images can be generated at any resolution. By projecting the data in different directions along the interval [0, pi) a sinogram is created, where every row represents one projection. In this repository I always assume that parallel beams are used and that the source and detector are at a distance of 1 from the origin.
+To simulate the acquisition of CT data the user can define a phantom consisting of nonoverlapping circles. From this continuous representation images can be generated at any resolution. By projecting the data stepwise in all directions a sinogram is created, where every row represents one projection. In this repository I always assume that parallel beams are used and that the source and detector are at a distance of 1 from the origin.
 
 ![Phantom and sinogram](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/PhantomAndSinogram.png)
 
@@ -19,8 +19,8 @@ Another technique to reconstruct a CT image is filtered back projection. In this
 
 ![Filtered back projection reconstruction](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/FilteredBackProjection.png)
 
-In the image above I used a straightforward ramp filter. As you can see the overall shape is reconstructed correctly, but the most of the image is slightly underestimated. By looking at the implementation of filtered back projection in the skimage library I found out that they used a slightly smarter filter. I also made this filter available in my code. With that filter most of the image is correctly reconstructed.
+In the image above I used a straightforward ramp filter. As you can see the overall shape is reconstructed correctly, but most of the image is slightly underestimated. By looking at the implementation of filtered back projection in the Scikit-Image library I found out that they used a slightly smarter filter. I also made the filter from Scikit-Image available in my code. With that filter most of the image is correctly reconstructed.
 
 ![Filtered back projection reconstruction with smarter filter](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/FilteredBackProjectionSkimageFilter.png)
 
-For more information on this filter you can have a look at [the skimage source code](https://github.com/scikit-image/scikit-image/blob/master/skimage/transform/radon_transform.py#L184-L305) or at chapter 3 of the book they mentioned as a reference: http://www.slaney.org/pct/pct-toc.html.
+For more information on this filter you can have a look at [the Scikit-Image source code](https://github.com/scikit-image/scikit-image/blob/master/skimage/transform/radon_transform.py#L184-L305) or at chapter 3 of the book they mentioned as a reference: http://www.slaney.org/pct/pct-toc.html.
