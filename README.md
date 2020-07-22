@@ -15,7 +15,7 @@ The process of calculating the projections from a given image can be modelled as
 Because matrix A has dimensions *all pixels in the reconstruction* x *all pixels in the sinogram* it can grow very quickly. That's also why I showed such a low resolution example. There are algorithms such as ART and SART that solve the same equation without needing the whole matrix to be in memory.
 
 ## Filtered Back Projection
-Another technique to reconstruct a CT image is filtered back projection. In this technique the sinogram is filtered using a Ram Lak filter (high pass ramp filter) and every projection (row of the sinogram) is smeared back over the image in the same direction it was acquired.
+Another technique to reconstruct a CT image is filtered back projection. In this technique the sinogram is filtered using a Ram Lak filter (high pass ramp filter) and every projection (row of the sinogram) is smeared back over the image in the same direction it was acquired. Using the implementation in this repository I got the following results.
 
 ![Filtered back projection reconstruction](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/FilteredBackProjection.png)
 
