@@ -3,7 +3,7 @@
 This repository contains Python scripts for the simulation of CT data acquisition and for CT reconstruction. The ct_toolbox.py file contains all reusable functions and the fbp_example.py and least_squares_example.py files show how this functionality can be used to reconstruct a CT image in 2 different ways: matrix inversion and filtered back projection.
 
 ## CT Simulation
-To simulate the acquisition of CT data the user can define a phantom consisting of nonoverlapping circles. From this continuous representation images can be generated at any resolution. By projecting the data stepwise in all directions a sinogram is created, where every row represents one projection. In this repository I always assume that parallel beams are used and that the source and detector are at a distance of 1 from the origin.
+To simulate the acquisition of CT data the user can define a phantom consisting of nonoverlapping circles. From this continuous representation images can be generated at any resolution. By projecting the data stepwise in all directions a sinogram is created, where every row represents one projection. In this repository I always assume that parallel beams are used and that the source and detector are at a distance of 1 from the origin. While I do calculations and plotting in a square region around this circle, only the results within the inscribed circle of this square should be considered when assessing the quality of the results.
 
 ![Phantom and sinogram](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/PhantomAndSinogram.png)
 
