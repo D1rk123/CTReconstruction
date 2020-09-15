@@ -2,6 +2,7 @@ import math
 import numpy as np
 from matplotlib import pyplot as plt
 import ct_toolbox as ctt
+import example_utilities as exutil
 
 #All circles must be fully contained within a circle with radius 1 and origin 0.0
 #because that is assumed during the reconstructions
@@ -40,22 +41,4 @@ reconstruction, _, rank, _ = np.linalg.lstsq(forwardMatrix, sinogram, rcond=0.07
 reconstruction.shape = (resX, resY)
 print("Used singular values: {}".format(rank))
 
-vmin = min(np.min(reconstruction), np.min(groundTruth))
-vmax = max(np.max(reconstruction), np.max(groundTruth))
-error = reconstruction-groundTruth
-
-plt.subplot(131)
-plt.imshow(reconstruction.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
-plt.title("Least Squares Reconstruction")
-plt.colorbar()
-
-plt.subplot(132)
-plt.imshow(groundTruth.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
-plt.title("Rasterized Phantom")
-plt.colorbar()
-
-plt.subplot(133)
-plt.imshow(error.T, origin='lower', cmap='PuOr_r', vmin=-1.5, vmax=1.5)
-plt.title("Error")
-plt.colorbar()
-plt.show()
+exutil.plotReconstructionComparison(reconstruction, groundTruth, "Least Squares Reconstruction")

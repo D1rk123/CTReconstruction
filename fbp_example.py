@@ -2,6 +2,7 @@ import math
 import numpy as np
 from matplotlib import pyplot as plt
 import ct_toolbox as ctt
+import example_utilities as exutil
 
 #All circles must be fully contained within a circle with radius 1 and origin 0.0
 #because that is assumed during the reconstructions
@@ -26,24 +27,5 @@ plt.show()
 
 reconstruction = ctt.makeBackprojection(filteredSinogram)
 rasterizedPhantom = ctt.rasterize(phantom, resolution, resolution)
-error = reconstruction-rasterizedPhantom
-vmin = min(np.min(reconstruction), np.min(rasterizedPhantom))
-vmax = max(np.max(reconstruction), np.max(rasterizedPhantom))
 
-plt.subplot(131)
-plt.imshow(reconstruction.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
-plt.title("FBP Reconstruction")
-plt.colorbar()
-
-plt.subplot(132)
-plt.imshow(rasterizedPhantom.T, origin='lower', cmap='gray', vmin=vmin, vmax=vmax)
-plt.title("Rasterized Phantom")
-plt.colorbar()
-
-plt.subplot(133)
-plt.imshow(error.T, origin='lower', cmap='PuOr_r', vmin=-1.5, vmax=1.5)
-plt.title("Error")
-plt.colorbar()
-
-plt.show()
-
+exutil.plotReconstructionComparison(reconstruction, rasterizedPhantom, "FBP Reconstruction")
