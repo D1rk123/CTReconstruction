@@ -113,23 +113,67 @@ def filterSinogram(sinogram, useSkimageFilter):
 	filteredFftSinogram = fftSinogram * filter
 	return np.real(np.fft.ifft(filteredFftSinogram, axis=0))
 	
+def getInterpAngle(i, numProjections):
+	return i*180.0/numProjections
+	
+def calcForwardMatrixRow(numDetectors, numProjections, resX, resY, i, j):
+	line = np.zeros(numDetectors)
+	segmentlength = 2  #length of the line segment we integrate over
+	line[j]=segmentlength*(numDetectors/resY)/resX
+	affectedArea = skimage.transform.resize(line[np.newaxis, :], (resX, resY))
+	#mode=constant, cval=0 specifies that when sampling outside of the image extents the image is assumed to be zero
+	#this isn't entirely accurate outside of the scanning circle
+	#but it shouldn't matter too much because all values outside the scanning circle are 0 in our experiments
+	#however I've seen that the mode setting does have some effect on the artifacts visible in the reconstruction
+	rotatedArea = skimage.transform.rotate(affectedArea, getInterpAngle(i, numProjections), mode='constant', cval=0)
+	#plt.imshow(rotatedArea.T, origin='lower', cmap='gray')
+	#plt.colorbar()
+	#plt.show()
+	rotatedArea.shape = (resX*resY)
+	return rotatedArea
+	
 def makeForwardMatrix(numDetectors, numProjections, resX, resY):
-	angleRange = np.linspace(0, math.pi, num=numProjections, endpoint=False)
 	result = np.zeros([numProjections*numDetectors, resX*resY])
 	for i in range(numProjections):
 		for j in range(numDetectors):
-			line = np.zeros(numDetectors)
-			segmentlength = 2  #length of the line segment we integrate over
-			line[j]=segmentlength*(numDetectors/resY)/resX
-			affectedArea = skimage.transform.resize(line[np.newaxis, :], (resX, resY))
-			#mode=constant, cval=0 specifies that when sampling outside of the image extents the image is assumed to be zero
-			#this isn't entirely accurate outside of the scanning circle
-			#but it shouldn't matter too much because all values outside the scanning circle are 0 in our experiments
-			#however I've seen that the mode setting does have some effect on the artifacts visible in the reconstruction
-			rotatedArea = skimage.transform.rotate(affectedArea, math.degrees(angleRange[i]), mode='constant', cval=0)
-			#plt.imshow(rotatedArea.T, origin='lower', cmap='gray')
-			#plt.colorbar()
-			#plt.show()
-			rotatedArea.shape = (result.shape[1])
-			result[i+j*numProjections, :] = rotatedArea
+			result[i+j*numProjections, :] = calcForwardMatrixRow(numDetectors, numProjections, resX, resY, i, j)
+	return result
+	
+def makeForwardMatrixRow(numDetectors, numProjections, resX, resY, rowNum):
+	i = rowNum % numProjections
+	j = rowNum // numProjections
+	return calcForwardMatrixRow(numDetectors, numProjections, resX, resY, i, j)
+	
+def applyForwardMatrixIteratively(image, numDetectors, numProjections):
+	resX = image.shape[0]
+	resY = image.shape[1]
+	image.shape = (resX*resY)
+	sinogram = np.zeros([numDetectors, numProjections])
+	for i in range(numProjections):
+		for j in range(numDetectors):
+			sinogram[j, i] = np.dot(image, calcForwardMatrixRow(numDetectors, numProjections, resX, resY, i, j))
+			
+	image.shape = (resX,resY)
+	return sinogram
+	
+def artReconstruction(sinogram, resX, resY, updateThreshold, maxIterations=20, relaxation=1, shuffleRowOrder=False):
+	result = np.zeros(resX * resY)
+	numDetectors = sinogram.shape[0]
+	numProjections = sinogram.shape[1]
+	numRows = numDetectors*numProjections
+	sinogram.shape = (numRows)
+	rowRange = np.arange(numRows)
+	for iter in range(maxIterations):
+		prevResult = result
+		if shuffleRowOrder:
+			np.random.shuffle(rowRange)
+		for rowNum in rowRange:
+			row = makeForwardMatrixRow(numDetectors, numProjections, resX, resY, rowNum)
+			result = result - row.T * ((relaxation*(np.dot(row, result) - sinogram[rowNum]))/np.linalg.norm(row))
+		resultDifference = np.average(np.abs(result-prevResult))
+		print(resultDifference)
+		if resultDifference < updateThreshold:
+			break
+	sinogram.shape = (numDetectors, numProjections)
+	result.shape = (resX, resY)
 	return result
