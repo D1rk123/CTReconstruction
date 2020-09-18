@@ -113,9 +113,6 @@ def filterSinogram(sinogram, useSkimageFilter):
 	filteredFftSinogram = fftSinogram * filter
 	return np.real(np.fft.ifft(filteredFftSinogram, axis=0))
 	
-def getInterpAngle(i, numProjections):
-	return i*180.0/numProjections
-	
 def calcForwardMatrixRow(numDetectors, numProjections, resX, resY, i, j):
 	line = np.zeros(numDetectors)
 	segmentlength = 2  #length of the line segment we integrate over
@@ -125,7 +122,7 @@ def calcForwardMatrixRow(numDetectors, numProjections, resX, resY, i, j):
 	#this isn't entirely accurate outside of the scanning circle
 	#but it shouldn't matter too much because all values outside the scanning circle are 0 in our experiments
 	#however I've seen that the mode setting does have some effect on the artifacts visible in the reconstruction
-	rotatedArea = skimage.transform.rotate(affectedArea, getInterpAngle(i, numProjections), mode='constant', cval=0)
+	rotatedArea = skimage.transform.rotate(affectedArea, i*180.0/numProjections, mode='constant', cval=0)
 	#plt.imshow(rotatedArea.T, origin='lower', cmap='gray')
 	#plt.colorbar()
 	#plt.show()
