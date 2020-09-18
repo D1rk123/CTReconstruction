@@ -4,11 +4,8 @@ from matplotlib import pyplot as plt
 import ct_toolbox as ctt
 import example_utilities as exutil
 
-#All circles must be fully contained within a circle with radius 1 and origin 0.0
-#because that is assumed during the reconstructions
-phantom = [ctt.Circle(np.array([-0.5, 0.5]), 0.2, 1),
-           ctt.Circle(np.array([-0.4, -0.4]), 0.3, 2),
-           ctt.Circle(np.array([0.5, 0.1]), 0.4, 3)]
+
+phantom = exutil.makeThreeCirclePhantom()
 
 resX = 50
 resY = resX
