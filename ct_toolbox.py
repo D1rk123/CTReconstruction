@@ -129,11 +129,14 @@ def calcForwardMatrixRow(numDetectors, numProjections, resX, resY, i, j):
 	rotatedArea.shape = (resX*resY)
 	return rotatedArea
 	
-def makeForwardMatrix(numDetectors, numProjections, resX, resY):
-	result = np.zeros([numProjections*numDetectors, resX*resY])
-	for i in range(numProjections):
+def makeForwardMatrix(numDetectors, numProjections, resX, resY, selectedProjections=None):
+	if selectedProjections is None:
+		selectedProjections = range(numProjections)
+	numSelectedProjections = len(selectedProjections)
+	result = np.zeros([len(selectedProjections)*numDetectors, resX*resY])
+	for i in range(numSelectedProjections):
 		for j in range(numDetectors):
-			result[i+j*numProjections, :] = calcForwardMatrixRow(numDetectors, numProjections, resX, resY, i, j)
+			result[i+j*numSelectedProjections, :] = calcForwardMatrixRow(numDetectors, numProjections, resX, resY, selectedProjections[i], j)
 	return result
 	
 def makeForwardMatrixRow(numDetectors, numProjections, resX, resY, rowNum):

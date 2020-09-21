@@ -11,11 +11,16 @@ resX = 50
 resY = resX
 numDetectors = 50
 numProjections = 50
+fracProjectionsIncluded = 0.3333
+
+numProjectionsIncluded = round(numProjections*fracProjectionsIncluded)
+selectedProjections = np.random.choice(numProjections, numProjectionsIncluded, replace=False)
 
 groundTruth = ctt.rasterize(phantom, resX, resY)
 sinogram = ctt.makeSinogram(phantom, numDetectors, numProjections)
-sinogram.shape = (numDetectors*numProjections)
-forwardMatrix = ctt.makeForwardMatrix(numDetectors, numProjections, resX, resY)
+sinogram = sinogram[:, selectedProjections]
+sinogram = sinogram.reshape(numDetectors*numProjectionsIncluded)
+forwardMatrix = ctt.makeForwardMatrix(numDetectors, numProjections, resX, resY, selectedProjections)
 
 reconstruction = cp.Variable(shape=(resX, resY))
 k = 0.1
