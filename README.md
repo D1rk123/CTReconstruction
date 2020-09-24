@@ -8,11 +8,25 @@ To simulate the acquisition of CT data the user can define a phantom consisting 
 ![Phantom and sinogram](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/PhantomAndSinogram.png)
 
 ## Reconstruction by Matrix Inversion
-The process of calculating the projections from a given image can be modelled as a linear process: A**x** = **y**, where **x** is a vector representing the image and **y** is a vector representing the sinogram. In a typical reconstruction setting **y** is measured and A can be derived from the setup, so **x** can be calculated by solving the equation for **x**. In most of my experiments I chose **x** and **y** to be the same size and the corresponding matrix A turned out to be slightly rank deficient. However the equation can still be solved in the least squares sense. The code uses the singular value decomposition based solver from Numpy. It is configured to discard the lowest singular values to reduce the noise in the reconstructed image caused by a slight mismatch between matrix A and the simulation used for generating the sinogram.
+The process of calculating the projections from a given image can be modelled as a linear process: A**x** = **y**, where **x** is a vector representing the image and **y** is a vector representing the sinogram. In a typical reconstruction setting **y** is measured and A can be derived from the setup, so **x** can be calculated by solving the equation for **x** in the least squares sense. Imaging problems are often very unstable, which is means that a small error in **y** or A can cause a large error in the solution for **x**. Any approach that changes the problem to make it less unstable is called a regularization. The way I calculated forward matrix A is slightly different from the way I calculated the sinogram, so some regularization is required to make sure this small mismatch doesn't cause a big error in the solution **x**.
+
+### Least Sqaures Solution Using the Singular Value Decomposition (SVD)
+A very general approach to regularization is to use the singular value decomposition (SVD) of matrix A. In simplified terms the SVD determines in which directions a small change in **x** can cause a big change in **y** and vice versa. Small singular values correspond to directions where a small change in **y** can cause a large change in **x**. By removing all singular values below a threshold from the SVD you can create a new matrix A' that is more stable. That matrix is never fully constructed in practice because the SVD is also a useful form for solving the least squares problem. The numpy function numpy.linalg.lstsq does both the thresholding and the inversion. In my example it is configured to discard all singular values that are smaller than 0.075 times the largest singular value.
 
 ![Matrix inversion reconstruction](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/LeastSquares.png)
 
+### Least Sqaures Solution with Total Variation Regularization
+
+![Matrix inversion reconstruction](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/CVX_TV.png)
+
+### Algorithmic Reconstruction Technique (ART)
+
 Because matrix A has dimensions *all pixels in the reconstruction* x *all pixels in the sinogram* it can grow very quickly. That's also why I showed such a low resolution example. There are algorithms such as ART and SART that solve the same equation without needing the whole matrix to be in memory.
+
+![Matrix inversion reconstruction](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/Art.png)
+
+### Simultaneous Algorithmic Reconstruction Technique (SART)
+![Matrix inversion reconstruction](https://raw.githubusercontent.com/D1rk123/CTReconstruction/master/GithubImages/Sart.png)
 
 ## Filtered Back Projection
 Another technique to reconstruct a CT image is filtered back projection. In this technique the sinogram is filtered using a Ram Lak filter (high pass ramp filter) and every projection (row of the sinogram) is smeared back over the image in the same direction it was acquired. Using the implementation in this repository I got the following results.
