@@ -177,3 +177,24 @@ def artReconstruction(sinogram, resX, resY, updateThreshold, maxIterations=20, r
 	sinogram.shape = (numDetectors, numProjections)
 	result.shape = (resX, resY)
 	return result
+	
+def sartReconstruction(sinogram, resX, resY, updateThreshold=0, maxIterations=1):
+	result = np.zeros(resX * resY)
+	numDetectors = sinogram.shape[0]
+	numProjections = sinogram.shape[1]
+	numRows = numDetectors*numProjections
+	for iter in range(maxIterations):
+		prevResult = np.copy(result)
+		for i in range(numProjections):
+			updateStep = np.zeros(resX * resY)
+			for j in range(numDetectors):
+				row = calcForwardMatrixRow(numDetectors, numProjections, resX, resY, i, j)
+				updateStep -= row.T * (((np.dot(row, result) - sinogram[j, i]))/np.linalg.norm(row))
+			result += updateStep
+		resultDifference = np.average(np.abs(result-prevResult))
+		print(resultDifference)
+		if resultDifference < updateThreshold:
+			break
+	result.shape = (resX, resY)
+	return result
+
