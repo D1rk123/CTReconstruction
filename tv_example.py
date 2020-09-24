@@ -11,7 +11,9 @@ resX = 50
 resY = resX
 numDetectors = 50
 numProjections = 50
-fracProjectionsIncluded = 0.3333
+# The regularizer is so powerful that even if you throw away some data the results still look good
+# This variable specifies the fraction of projections that should be used
+fracProjectionsIncluded = 1
 
 numProjectionsIncluded = round(numProjections*fracProjectionsIncluded)
 selectedProjections = np.random.choice(numProjections, numProjectionsIncluded, replace=False)
@@ -34,4 +36,4 @@ prob.solve(verbose=True, solver=cp.SCS)
 # cvxpy uses column-major order for flattening matrices (cp.vec)
 # while numpy uses row-major order
 # therefore the reconstruction has to be transposed here
-exutil.plotReconstructionComparison(reconstruction.value.T, groundTruth, "Least Squares Reconstruction")
+exutil.plotReconstructionComparison(reconstruction.value.T, groundTruth, "TV Regularized Reconstruction")
